@@ -1,4 +1,5 @@
 const css = require('css');
+const layout = require('./layout.js');
 let currentToken = null;
 let currentAttribute = null;
 let currentTextNode = null;
@@ -121,6 +122,7 @@ function emit(token) {
         }
 
         computeCSS(element);
+        // layout(element);
 
         top.children.push(element);
         element.parent = top;
@@ -137,6 +139,7 @@ function emit(token) {
             if (top.tagName === 'style') {
                 addCSSRules(top.children[0].content);
             }
+            layout(top);
             stack.pop();
         }
         currentTextNode = null;
