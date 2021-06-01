@@ -14,7 +14,7 @@ let syntax = {
         ["FunctionDeclaration"]
     ],
     FunctionDeclaration: [
-        "function", "Identifier", "(", ")", "{", "StatementList", "}"
+        ["function", "Identifier", "(", ")", "{", "StatementList", "}"]
     ],
     IfStatement: [
         ["if", "(", "Expression", ")", "Statement"]
@@ -27,7 +27,19 @@ let syntax = {
         ["Expression", ";"]
     ],
     Expression: [
-        ["AdditiveExpression"]
+        ["AssignmentExpression"]
+    ],
+    AssignmentExpression: [
+        ["LeftHandSideExpression", "=", "LogicalORExpression"],
+        ["LogicalORExpression"]
+    ],
+    LogicalORExpression: [
+        ["LogicalANDExpression"],
+        ["LogicalORExpression", "||", "LogicalANDExpression"],
+    ],
+    LogicalANDExpression: [
+        ["AdditiveExpression"],
+        ["LogicalANDExpression", "&&", "AdditiveExpression"]
     ],
     AdditiveExpression: [
         ["MultiplicativeExpression"],
@@ -35,9 +47,26 @@ let syntax = {
         ["AdditiveExpression", "-", "MultiplicativeExpression"]
     ],
     MultiplicativeExpression: [
+        ["LeftHandSideExpression"],
+        ["MultiplicativeExpression", "*", "LeftHandSideExpression"],
+        ["MultiplicativeExpression", "/", "LeftHandSideExpression"]
+    ],
+    LeftHandSideExpression: [
+        ["CallExpression"],
+        ["NewExpression"]
+    ],
+    CallExpression: [
+        ["MemberExpression", "Arguments"],
+        ["CallExpression", "Arguments"]
+    ],
+    NewExpression: [
+        ["MemberExpression"],
+        ["new", "NewExpression"]
+    ],
+    MemberExpression: [
         ["PrimaryExpression"],
-        ["MultiplicativeExpression", "*", "PrimaryExpression"],
-        ["MultiplicativeExpression", "/", "PrimaryExpression"]
+        ["PrimaryExpression", ".", "Identifier"],
+        ["PrimaryExpression", "[", "Expression", "]"]
     ],
     PrimaryExpression: [
         ["(", "Expression", ")"],
@@ -45,11 +74,25 @@ let syntax = {
         ["Identifier"]
     ],
     Literal: [
-        ["Number"],
-        ["String"],
-        ["Boolean"],
-        ["Null"],
-        ["RegularExpression"]
+        ["NumericLiteral"],
+        ["StringLiteral"],
+        ["BooleanLiteral"],
+        ["NullLiteral"],
+        ["RegularExpressionLiteral"],
+        ["ObjectLiteral"],
+        ["ArrayLiteral"]
+    ],
+    ObjectLiteral: [
+        ["{", "}"],
+        ["{", "PropertyList", "}"]
+    ],
+    PropertyList: [
+        ["Property"],
+        ["PropertyList", ',', "Property"]
+    ],
+    Property: [
+        ["StringLiteral", ":", "AdditiveExpression"],
+        ["Identifier", ":", "AdditiveExpression"]
     ]
 }
 
@@ -62,7 +105,7 @@ function closure(state) {
     let queue = [];
     for (let symbol in state) {
         if (symbol.match(/^\$/)) {
-            return;
+            continue;
         }
         queue.push(symbol);
     }
@@ -88,7 +131,7 @@ function closure(state) {
     }
     for (let symbol in state) {
         if (symbol.match(/^\$/)) {
-            return;
+            continue;
         }
         if (hash[JSON.stringify(state[symbol])]) {
             state[symbol] = hash[JSON.stringify(state[symbol])];
@@ -109,7 +152,7 @@ let start = {
 
 closure(start);
 
-function parse(source) {
+export function parse(source) {
     let stack = [start];
     let symbolStack = [];
     function reduce() {
@@ -146,45 +189,5 @@ function parse(source) {
 
     return reduce();
 }
-
-const evaluator = {
-    Program(node) {
-        return evaluate(node.children[0]);
-    },
-    StatementList(node) {
-        if (node.children.length === 1) {
-            return evaluate(node.children[0]);
-        } else {
-            evaluate(node.children[0]);
-            return evaluate(node.children[1]);
-        }
-    },
-    Statement(node) {
-        return evaluate(node.children[0]);
-    },
-    VariableDeclaration(node) {
-        console.log("Declare variable", node.children[1].name);
-    },
-    EOF() {
-        return null;
-    }
-}
-
-function evaluate(node) {
-    if (evaluator[node.type]) {
-        return evaluator[node.type](node);
-    }
-}
-
-
 ////////////////////////////////////
-
-let source = `
-    let a;
-    var b;
-`;
-
-const tree = parse(source);
-
-evaluate(tree);
 
