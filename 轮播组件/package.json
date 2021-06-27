@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "webpack-dev-server"
   },
   "author": "",
   "license": "ISC",
@@ -13,8 +14,10 @@
     "@babel/plugin-transform-react-jsx": "^7.14.3",
     "@babel/preset-env": "^7.14.4",
     "babel-loader": "^8.2.2",
-    "webpack": "^5.38.1",
-    "webpack-cli": "^4.7.2",
+    "webpack-cli": "^3.3.12"
+  },
+  "dependencies": {
+    "webpack": "^5.39.1",
     "webpack-dev-server": "^3.11.2"
   }
 }
